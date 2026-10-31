@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">InvoiceForge</string>
+    <string name="invoice_number_prefix">INV-</string>
+</resources>
