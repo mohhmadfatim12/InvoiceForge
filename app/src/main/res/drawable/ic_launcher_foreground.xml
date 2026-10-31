@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Base Document Sheet -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,26 C31.79,26 30,27.79 30,30 L30,78 C30,80.21 31.79,82 34,82 L74,82 C76.21,82 78,80.21 78,78 L78,42 L62,26 L34,26 Z" />
+    
+    <!-- Document Fold Corner -->
+    <path
+        android:fillColor="#D0E2FF"
+        android:pathData="M62,26 L78,42 L64,42 C62.9,42 62,41.1 62,40 L62,26 Z" />
+        
+    <!-- Invoice Content Lines -->
+    <path
+        android:fillColor="#184C78"
+        android:pathData="M38,46 h18 v3 h-18 z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M38,54 h32 v2.5 h-32 z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M38,60 h32 v2.5 h-32 z" />
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M38,66 h20 v2.5 h-20 z" />
+
+    <!-- Stylized Glowing Forge Spark / Seal -->
+    <path
+        android:pathData="M68,68 L73,63 L78,68 L73,73 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:angle="45"
+                android:endColor="#00E5FF"
+                android:startColor="#0091EA"
+                android:type="linear" />
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M73,65 L75,68 L73,71 L71,68 Z" />
+</vector>
