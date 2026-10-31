@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>InvoiceForge — Mobile Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #184c78;
+      --primary-light: #e8f0fe;
+      --surface: #ffffff;
+      --background: #f8f9fa;
+      --text: #1a1c1e;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --status-paid: #2e7d32;
+      --status-pending: #0288d1;
+      --status-partial: #f57c00;
+      --status-overdue: #d32f2f;
+      --status-draft: #757575;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--background); color: var(--text); padding-bottom: 75px; user-select: none; }
+    
+    /* Top Bar */
+    .top-bar {
+      position: sticky; top: 0; z-index: 50; background: var(--surface);
+      border-bottom: 1px solid var(--border); padding: 14px 18px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .top-bar h1 { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .badge-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+
+    /* Content Area */
+    .container { padding: 16px; max-width: 480px; margin: 0 auto; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
+    .stat-value { font-size: 18px; font-weight: 700; }
+    .stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Status Badges */
+    .status-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .badge-draft { background: #e0e0e0; color: #424242; }
+    .badge-pending { background: #e1f5fe; color: var(--status-pending); }
+    .badge-partially_paid { background: #fff3e0; color: var(--status-partial); }
+    .badge-paid { background: #e8f5e9; color: var(--status-paid); }
+    .badge-overdue { background: #ffebee; color: var(--status-overdue); }
+
+    /* Inputs & Forms */
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+    .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: #fff; }
+    .form-control:focus { border-color: var(--primary); ring: 2px var(--primary-light); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn:active { opacity: 0.85; }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+
+    /* Search & Filters */
+    .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .filter-chip { padding: 6px 12px; border-radius: 20px; font-size: 12px; background: #fff; border: 1px solid var(--border); white-space: nowrap; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; align-items: center; z-index: 50;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--text-muted); font-weight: 600; cursor: pointer; gap: 3px; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item svg { width: 22px; height: 22px; }
+
+    /* Item List */
+    .invoice-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 10px; }
+    .item-title { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+    .item-sub { font-size: 12px; color: var(--text-muted); }
+    .item-amount { font-weight: 700; font-size: 15px; color: var(--primary); text-align: right; }
+    .item-due { font-size: 11px; color: var(--status-overdue); font-weight: 600; }
+
+    /* Chart Simulation */
+    .chart-container { display: flex; justify-content: space-between; align-items: flex-end; height: 110px; padding: 14px 4px 4px; }
+    .chart-col { display: flex; flex-direction: column; align-items: center; width: 14%; height: 100%; justify-content: flex-end; }
+    .chart-bars { display: flex; gap: 3px; align-items: flex-end; height: 85px; }
+    .bar-inv { width: 8px; background: var(--primary); border-radius: 3px 3px 0 0; }
+    .bar-paid { width: 8px; background: var(--status-paid); border-radius: 3px 3px 0 0; }
+    .chart-month { font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: none; align-items: flex-end; }
+    .modal-content { background: #fff; width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; overflow-y: auto; }
+
+    /* A4 Print Simulator */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .top-bar, .bottom-nav, .no-print { display: none !important; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <div class="top-bar">
+    <div>
+      <h1 id="topbar-title">InvoiceForge</h1>
+      <div style="font-size: 11px; color: var(--text-muted);">100% Offline Mobile Invoicing</div>
+    </div>
+    <div class="badge-avatar" id="avatar-initials">IF</div>
+  </div>
+
+  <!-- Screen 1: Dashboard -->
+  <div id="screen-dashboard" class="container screen active">
+    <div class="grid-2">
+      <div class="stat-card">
+        <div class="stat-label">TOTAL INVOICED</div>
+        <div class="stat-value" id="dash-invoiced">$0.00</div>
+        <div class="stat-sub" id="dash-month-count">0 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TOTAL RECEIVED</div>
+        <div class="stat-value" id="dash-received" style="color: var(--status-paid);">$0.00</div>
+        <div class="stat-sub" id="dash-paid-count">0 paid in full</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">OUTSTANDING</div>
+        <div class="stat-value" id="dash-outstanding" style="color: var(--status-partial);">$0.00</div>
+        <div class="stat-sub">Pending balances</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">OVERDUE</div>
+        <div class="stat-value" id="dash-overdue" style="color: var(--status-overdue);">0</div>
+        <div class="stat-sub">Action required</div>
+      </div>
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 13px; font-weight: 700;">6-Month Revenue Trend</span>
+        <div style="display: flex; gap: 8px; font-size: 10px; color: var(--text-muted);">
+          <span><span style="display:inline-block;width:8px;height:8px;background:var(--primary);border-radius:2px;"></span> Invoiced</span>
+          <span><span style="display:inline-block;width:8px;height:8px;background:var(--status-paid);border-radius:2px;"></span> Paid</span>
+        </div>
+      </div>
+      <div class="chart-container" id="chart-bars-wrap">
+        <!-- Bars generated dynamically -->
+      </div>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px;">
+      <span style="font-size: 14px; font-weight: 700;">Recent Invoices</span>
+      <button class="btn btn-outline" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="showScreen('invoices')">View All</button>
+    </div>
+    <div id="recent-invoices-list"></div>
+    <button class="btn" style="margin-top: 14px;" onclick="openNewInvoiceModal()">+ Create New Invoice</button>
+  </div>
+
+  <!-- Screen 2: Invoices List -->
+  <div id="screen-invoices" class="container screen">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <input type="text" id="invoice-search" class="form-control" placeholder="Search by #, client, or notes..." oninput="renderInvoiceList()">
+    </div>
+    <div class="filter-scroll" id="status-filters">
+      <div class="filter-chip active" onclick="setInvoiceFilter('ALL', this)">All</div>
+      <div class="filter-chip" onclick="setInvoiceFilter('PENDING', this)">Pending</div>
+      <div class="filter-chip" onclick="setInvoiceFilter('PARTIALLY_PAID', this)">Partially Paid</div>
+      <div class="filter-chip" onclick="setInvoiceFilter('PAID', this)">Paid</div>
+      <div class="filter-chip" onclick="setInvoiceFilter('OVERDUE', this)">Overdue</div>
+      <div class="filter-chip" onclick="setInvoiceFilter('DRAFT', this)">Draft</div>
+    </div>
+    <div id="full-invoices-list"></div>
+    <button class="btn" style="margin-top: 12px;" onclick="openNewInvoiceModal()">+ New Invoice</button>
+  </div>
+
+  <!-- Screen 3: Clients List -->
+  <div id="screen-clients" class="container screen">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <input type="text" id="client-search" class="form-control" placeholder="Search clients..." oninput="renderClientList()">
+    </div>
+    <div id="clients-list"></div>
+    <button class="btn" style="margin-top: 12px;" onclick="openNewClientModal()">+ Add New Client</button>
+  </div>
+
+  <!-- Screen 4: Settings -->
+  <div id="screen-settings" class="container screen">
+    <div class="card">
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">Business Profile</h3>
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input type="text" id="cfg-name" class="form-control" value="My Freelance Studio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency Symbol</label>
+        <input type="text" id="cfg-currency" class="form-control" value="$">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Default Tax Rate (%)</label>
+        <input type="number" id="cfg-tax-rate" class="form-control" value="5">
+      </div>
+      <button class="btn btn-secondary" onclick="saveSettings()">Save Profile Details</button>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">Export & Backup</h3>
+      <button class="btn btn-outline" style="margin-bottom: 8px;" onclick="exportCSV()">Export Invoices to CSV</button>
+      <button class="btn btn-outline" style="margin-bottom: 8px;" onclick="exportBackupJSON()">Download JSON Backup</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showScreen('dashboard', this)">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showScreen('invoices', this)">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+      Invoices
+    </div>
+    <div class="nav-item" onclick="showScreen('clients', this)">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      Clients
+    </div>
+    <div class="nav-item" onclick="showScreen('settings', this)">
+      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      Settings
+    </div>
+  </div>
+
+  <!-- Create Invoice Modal -->
+  <div class="modal-backdrop" id="modal-invoice">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 14px;">Create Invoice</h3>
+      <div class="form-group">
+        <label class="form-label">Client</label>
+        <select id="inv-client-select" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Invoice Number</label>
+        <input type="text" id="inv-num" class="form-control" value="INV-0001">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input type="date" id="inv-due" class="form-control">
+      </div>
+      
+      <div style="font-weight: 700; margin: 12px 0 6px;">Line Items</div>
+      <div id="items-list-inputs">
+        <div class="card" style="padding: 10px; margin-bottom: 8px;">
+          <input type="text" class="form-control item-desc" placeholder="Item description" value="Web Design & Branding" style="margin-bottom: 6px;">
+          <div style="display: flex; gap: 8px;">
+            <input type="number" class="form-control item-qty" placeholder="Qty" value="1" oninput="recalculateModal()">
+            <input type="number" class="form-control item-price" placeholder="Price" value="500" oninput="recalculateModal()">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" style="font-size: 12px; padding: 6px; margin-bottom: 12px;" onclick="addModalItemRow()">+ Add Another Item</button>
+
+      <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; margin: 14px 0;">
+        <span>Total Due:</span>
+        <span id="modal-calc-total" style="color: var(--primary);">$500.00</span>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-invoice')">Cancel</button>
+        <button class="btn" onclick="saveNewInvoice()">Save Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Client Modal -->
+  <div class="modal-backdrop" id="modal-client">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 14px;">Add New Client</h3>
+      <div class="form-group">
+        <label class="form-label">Client / Contact Name *</label>
+        <input type="text" id="client-name" class="form-control" placeholder="e.g. Alex Johnson">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" id="client-company" class="form-control" placeholder="e.g. Apex Studio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="client-email" class="form-control" placeholder="alex@apex.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="tel" id="client-phone" class="form-control" placeholder="+1 555-0199">
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 14px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-client')">Cancel</button>
+        <button class="btn" onclick="saveNewClient()">Save Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoice Detail / PDF Modal -->
+  <div class="modal-backdrop" id="modal-detail">
+    <div class="modal-content" style="max-height: 92vh;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 id="detail-inv-num">Invoice</h3>
+        <span id="detail-badge" class="status-badge badge-pending">Pending</span>
+      </div>
+      
+      <!-- A4 Styled Document Card -->
+      <div id="printable-invoice" style="border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: #fff; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 12px;">
+          <div>
+            <div id="print-biz-name" style="font-weight: 700; color: var(--primary); font-size: 15px;">InvoiceForge Studio</div>
+            <div style="font-size: 10px; color: var(--text-muted);">Official Offline Invoice</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: 700; font-size: 14px; color: var(--primary);" id="print-inv-title">INVOICE</div>
+            <div style="font-size: 10px; color: var(--text-muted);" id="print-inv-due">Due: -</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">BILLED TO:</div>
+          <div id="print-client-name" style="font-weight: 700; font-size: 13px;">Guest</div>
+          <div id="print-client-email" style="font-size: 11px; color: var(--text-muted);">-</div>
+        </div>
+
+        <div id="print-items-table" style="margin-bottom: 12px;"></div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 8px; text-align: right;">
+          <div style="font-size: 11px; color: var(--text-muted);">Subtotal: <span id="print-subtotal">$0.00</span></div>
+          <div style="font-size: 14px; font-weight: 700; color: var(--primary); margin-top: 2px;">Total Due: <span id="print-total">$0.00</span></div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--status-overdue); margin-top: 2px;">Balance Due: <span id="print-balance">$0.00</span></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn" onclick="triggerPrintPdf()">📄 Print / Save A4 PDF</button>
+        <button class="btn btn-outline" id="btn-record-payment" onclick="recordFullPayment()">💳 Record Full Payment</button>
+        <button class="btn btn-secondary" onclick="closeModal('modal-detail')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State Store (100% Offline LocalStorage)
+    let state = {
+      profile: { name: 'My Freelance Studio', currency: '$', taxRate: 5 },
+      clients: [
+        { id: 1, name: 'Apex Design Agency', company: 'Apex LLC', email: 'billing@apex.com', phone: '+1 555-0100' },
+        { id: 2, name: 'Nova Tech Solutions', company: 'Nova Corp', email: 'accounts@nova.tech', phone: '+1 555-0144' }
+      ],
+      invoices: [
+        { id: 1, num: 'INV-0001', clientId: 1, due: '2026-11-15', items: [{ desc: 'UI/UX Mobile App Design', qty: 1, price: 1200 }], status: 'PAID', paid: 1200 },
+        { id: 2, num: 'INV-0002', clientId: 2, due: '2026-11-20', items: [{ desc: 'Fullstack Kotlin API Integration', qty: 1, price: 850 }], status: 'PENDING', paid: 0 }
+      ],
+      activeFilter: 'ALL',
+      activeInvoiceId: null
+    };
+
+    function loadState() {
+      const saved = localStorage.getItem('invoice_forge_db');
+      if (saved) {
+        try { state = JSON.parse(saved); } catch(e){}
+      }
+      renderDashboard();
+      renderInvoiceList();
+      renderClientList();
+    }
+
+    function saveState() {
+      localStorage.setItem('invoice_forge_db', JSON.stringify(state));
+    }
+
+    function showScreen(name, el) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('screen-' + name).classList.add('active');
+      if (el) el.classList.add('active');
+      document.getElementById('topbar-title').innerText = name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    function formatMoney(amount) {
+      const cur = state.profile.currency || '$';
+      return cur + Number(amount).toFixed(2);
+    }
+
+    function renderDashboard() {
+      let totalInvoiced = 0, totalPaid = 0, totalDue = 0, overdue = 0;
+      state.invoices.forEach(inv => {
+        const total = inv.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+        totalInvoiced += total;
+        totalPaid += (inv.paid || 0);
+        if (inv.status === 'OVERDUE') overdue++;
+      });
+      totalDue = Math.max(0, totalInvoiced - totalPaid);
+
+      document.getElementById('dash-invoiced').innerText = formatMoney(totalInvoiced);
+      document.getElementById('dash-received').innerText = formatMoney(totalPaid);
+      document.getElementById('dash-outstanding').innerText = formatMoney(totalDue);
+      document.getElementById('dash-overdue').innerText = overdue;
+      document.getElementById('dash-month-count').innerText = state.invoices.length + ' this month';
+      document.getElementById('dash-paid-count').innerText = state.invoices.filter(i => i.status === 'PAID').length + ' paid';
+
+      // 6-Month Chart
+      const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
+      const chartHtml = months.map((m, idx) => {
+        const hInv = Math.min(80, (idx + 1) * 14);
+        const hPaid = Math.min(80, (idx + 1) * 11);
+        return `
+          <div class="chart-col">
+            <div class="chart-bars">
+              <div class="bar-inv" style="height:${hInv}px;"></div>
+              <div class="bar-paid" style="height:${hPaid}px;"></div>
+            </div>
+            <div class="chart-month">${m}</div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('chart-bars-wrap').innerHTML = chartHtml;
+
+      // Recents
+      const recents = state.invoices.slice(-3).reverse();
+      document.getElementById('recent-invoices-list').innerHTML = recents.map(renderInvoiceRowHtml).join('');
+    }
+
+    function renderInvoiceRowHtml(inv) {
+      const client = state.clients.find(c => c.id === inv.clientId) || { name: 'Client' };
+      const total = inv.items.reduce((s, i) => s + (i.qty * i.price), 0);
+      const balance = Math.max(0, total - (inv.paid || 0));
+      return `
+        <div class="invoice-item" onclick="openInvoiceDetail(${inv.id})">
+          <div>
+            <div class="item-title">${inv.num} <span class="status-badge badge-${inv.status.toLowerCase()}">${inv.status}</span></div>
+            <div class="item-sub">${client.name} • Due: ${inv.due}</div>
+          </div>
+          <div>
+            <div class="item-amount">${formatMoney(total)}</div>
+            ${balance > 0 ? `<div class="item-due">Bal: ${formatMoney(balance)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderInvoiceList() {
+      const q = (document.getElementById('invoice-search').value || '').toLowerCase();
+      let filtered = state.invoices;
+      if (state.activeFilter !== 'ALL') {
+        filtered = filtered.filter(i => i.status === state.activeFilter);
+      }
+      if (q) {
+        filtered = filtered.filter(i => {
+          const client = state.clients.find(c => c.id === i.clientId);
+          return i.num.toLowerCase().includes(q) || (client && client.name.toLowerCase().includes(q));
+        });
+      }
+      document.getElementById('full-invoices-list').innerHTML = filtered.length ? filtered.map(renderInvoiceRowHtml).join('') : '<div style="text-align:center;padding:30px;color:var(--text-muted);">No invoices found.</div>';
+    }
+
+    function setInvoiceFilter(status, el) {
+      state.activeFilter = status;
+      document.querySelectorAll('#status-filters .filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderInvoiceList();
+    }
+
+    function renderClientList() {
+      const q = (document.getElementById('client-search').value || '').toLowerCase();
+      let filtered = state.clients;
+      if (q) {
+        filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || (c.company && c.company.toLowerCase().includes(q)));
+      }
+      document.getElementById('clients-list').innerHTML = filtered.map(c => `
+        <div class="invoice-item">
+          <div>
+            <div class="item-title">${c.name}</div>
+            <div class="item-sub">${c.company || 'Private Client'} • ${c.email || c.phone || 'No phone'}</div>
+          </div>
+          <button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:12px;" onclick="createInvoiceForClient(${c.id})">Invoice</button>
+        </div>
+      `).join('');
+    }
+
+    function openNewInvoiceModal() {
+      const clientSelect = document.getElementById('inv-client-select');
+      clientSelect.innerHTML = state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      const nextNum = 'INV-' + String(state.invoices.length + 1).padStart(4, '0');
+      document.getElementById('inv-num').value = nextNum;
+      
+      const d = new Date();
+      d.setDate(d.getDate() + 14);
+      document.getElementById('inv-due').value = d.toISOString().split('T')[0];
+      recalculateModal();
+      document.getElementById('modal-invoice').style.display = 'flex';
+    }
+
+    function addModalItemRow() {
+      const wrap = document.getElementById('items-list-inputs');
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.padding = '10px';
+      div.style.marginBottom = '8px';
+      div.innerHTML = `
+        <input type="text" class="form-control item-desc" placeholder="Item description" value="Consulting Service" style="margin-bottom:6px;">
+        <div style="display:flex;gap:8px;">
+          <input type="number" class="form-control item-qty" placeholder="Qty" value="1" oninput="recalculateModal()">
+          <input type="number" class="form-control item-price" placeholder="Price" value="100" oninput="recalculateModal()">
+        </div>
+      `;
+      wrap.appendChild(div);
+      recalculateModal();
+    }
+
+    function recalculateModal() {
+      let total = 0;
+      const descs = document.querySelectorAll('.item-desc');
+      const qtys = document.querySelectorAll('.item-qty');
+      const prices = document.querySelectorAll('.item-price');
+      for (let i = 0; i < descs.length; i++) {
+        const q = Number(qtys[i]?.value) || 0;
+        const p = Number(prices[i]?.value) || 0;
+        total += (q * p);
+      }
+      document.getElementById('modal-calc-total').innerText = formatMoney(total);
+    }
+
+    function saveNewInvoice() {
+      const clientId = Number(document.getElementById('inv-client-select').value);
+      const num = document.getElementById('inv-num').value;
+      const due = document.getElementById('inv-due').value;
+
+      const items = [];
+      const descs = document.querySelectorAll('.item-desc');
+      const qtys = document.querySelectorAll('.item-qty');
+      const prices = document.querySelectorAll('.item-price');
+      for (let i = 0; i < descs.length; i++) {
+        items.push({
+          desc: descs[i].value,
+          qty: Number(qtys[i].value) || 1,
+          price: Number(prices[i].value) || 0
+        });
+      }
+
+      state.invoices.push({
+        id: Date.now(),
+        num: num,
+        clientId: clientId,
+        due: due,
+        items: items,
+        status: 'PENDING',
+        paid: 0
+      });
+
+      saveState();
+      closeModal('modal-invoice');
+      renderDashboard();
+      renderInvoiceList();
+    }
+
+    function openNewClientModal() {
+      document.getElementById('modal-client').style.display = 'flex';
+    }
+
+    function saveNewClient() {
+      const name = document.getElementById('client-name').value;
+      if (!name) return alert('Please enter client name');
+      state.clients.push({
+        id: Date.now(),
+        name: name,
+        company: document.getElementById('client-company').value,
+        email: document.getElementById('client-email').value,
+        phone: document.getElementById('client-phone').value
+      });
+      saveState();
+      closeModal('modal-client');
+      renderClientList();
+    }
+
+    function openInvoiceDetail(id) {
+      state.activeInvoiceId = id;
+      const inv = state.invoices.find(i => i.id === id);
+      if (!inv) return;
+
+      const client = state.clients.find(c => c.id === inv.clientId) || { name: 'Client' };
+      const total = inv.items.reduce((s, i) => s + (i.qty * i.price), 0);
+      const balance = Math.max(0, total - (inv.paid || 0));
+
+      document.getElementById('detail-inv-num').innerText = inv.num;
+      const badge = document.getElementById('detail-badge');
+      badge.className = 'status-badge badge-' + inv.status.toLowerCase();
+      badge.innerText = inv.status;
+
+      document.getElementById('print-inv-title').innerText = inv.num;
+      document.getElementById('print-inv-due').innerText = 'Due: ' + inv.due;
+      document.getElementById('print-client-name').innerText = client.name;
+      document.getElementById('print-client-email').innerText = client.company || client.email || '-';
+
+      document.getElementById('print-items-table').innerHTML = inv.items.map(i => `
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #f1f5f9;">
+          <span>${i.desc} (x${i.qty})</span>
+          <span style="font-weight:700;">${formatMoney(i.qty * i.price)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('print-subtotal').innerText = formatMoney(total);
+      document.getElementById('print-total').innerText = formatMoney(total);
+      document.getElementById('print-balance').innerText = formatMoney(balance);
+
+      const btnPay = document.getElementById('btn-record-payment');
+      btnPay.style.display = balance > 0 ? 'block' : 'none';
+
+      document.getElementById('modal-detail').style.display = 'flex';
+    }
+
+    function recordFullPayment() {
+      const inv = state.invoices.find(i => i.id === state.activeInvoiceId);
+      if (inv) {
+        const total = inv.items.reduce((s, i) => s + (i.qty * i.price), 0);
+        inv.paid = total;
+        inv.status = 'PAID';
+        saveState();
+        openInvoiceDetail(inv.id);
+        renderDashboard();
+        renderInvoiceList();
+      }
+    }
+
+    function triggerPrintPdf() {
+      window.print();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function exportCSV() {
+      let csv = "Invoice Number,Client,Due Date,Total,Status\n";
+      state.invoices.forEach(i => {
+        const c = state.clients.find(cl => cl.id === i.clientId);
+        const t = i.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+        csv += `"${i.num}","${c ? c.name : ''}","${i.due}",${t},"${i.status}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'InvoiceForge_Invoices.csv';
+      a.click();
+    }
+
+    function exportBackupJSON() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'InvoiceForge_Backup.json';
+      a.click();
+    }
+
+    function saveSettings() {
+      state.profile.name = document.getElementById('cfg-name').value;
+      state.profile.currency = document.getElementById('cfg-currency').value;
+      saveState();
+      alert('Business Profile Saved!');
+      renderDashboard();
+    }
+
+    loadState();
+  </script>
+</body>
+</html>
